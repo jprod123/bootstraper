@@ -55,30 +55,31 @@ echo \
 install_zsh(){
   sudo -u $ORIGINAL_USERNAME chsh -s /usr/bin/zsh
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-  #TODO: Import .zshrc
+
+  curl -fsSL https://raw.githubusercontent.com/jprod123/bootstraper/main/zsh-config >> /home/$ORIGINAL_USERNAME/.zshrc
 }
 
 mount_network_share(){
-	echo "Configuring cifs share"
-	CREDENTIALS_FILE="/home/$ORIGINAL_USERNAME/.creds"
-	DEFAULT_MOUNT_LOCATION="/mnt/HDD1-share"
-read -p "Enter cifs user: " CIFS_USER
-read -s -p "Enter cifs user: " CIFS_PASSWORD
+  echo "Configuring cifs share"
+  CREDENTIALS_FILE="/home/$ORIGINAL_USERNAME/.creds"
+  DEFAULT_MOUNT_LOCATION="/mnt/HDD1-share"
+  read -p "Enter cifs user: " CIFS_USER
+  read -s -p "Enter cifs user: " CIFS_PASSWORD
 
-echo "username=$CIFS_USER" >> $CREDENTIALS_FILE
-echo "password=$CIFS_PASSWORD" >> $CREDENTIALS_FILE
+  echo "username=$CIFS_USER" >> $CREDENTIALS_FILE
+  echo "password=$CIFS_PASSWORD" >> $CREDENTIALS_FILE
 
-mkdir $DEFAULT_MOUNT_LOCATION
+  mkdir $DEFAULT_MOUNT_LOCATION
 
-echo "//192.168.0.31/HDD1-share $DEFAULT_MOUNT_LOCATION cifs credentials=$CREDENTIALS_FILE,uid=$ORIGINAL_USERNAME,forceuid,gid=$ORIGINAL_GROUP_ID,forcegid,noauto,x-systemd.automount 0 0" >> /etc/fstab
+  echo "//192.168.0.31/HDD1-share $DEFAULT_MOUNT_LOCATION cifs credentials=$CREDENTIALS_FILE,uid=$ORIGINAL_USERNAME,forceuid,gid=$ORIGINAL_GROUP_ID,forcegid,noauto,x-systemd.automount 0 0" >> /etc/fstab
 
 }
 
 
 if [ "$(id -u)" != "0" ]; then
-	echo "This script must be run with sudo."
-	display_usage() 
-	exit 1
+  echo "This script must be run with sudo."
+  display_usage() 
+  exit 1
 fi
 
 # Check for flags
@@ -108,27 +109,34 @@ echo "  No Zsh: $NO_ZSH"
 
 
 if [ "$#" -eq 0 ]; then
-    echo "No options provided. Proceeding with the installation..."
+  echo "No options provided. Proceeding with the installation..."
 else
-    # Prompt the user to continue
-    read -p "Do you want to continue with the installation? (y/n): " choice
-    case "$choice" in
-        y|Y ) echo "Starting installation..." ;;
-        n|N ) echo "Installation cancelled." && exit 0 ;;
-        * ) echo "Invalid choice. Installation cancelled." && exit 1 ;;
-    esac
+  # Prompt the user to continue
+  read -p "Do you want to continue with the installation? (y/n): " choice
+  case "$choice" in
+    y|Y ) echo "Starting installation..." ;;
+    n|N ) echo "Installation cancelled." && exit 0 ;;
+    * ) echo "Invalid choice. Installation cancelled." && exit 1 ;;
+  esac
 fi
 
 install_packages
 
 if [ "$NO_DOCKER" = true ]; then
-    echo "Docker disabled."
+  echo "Docker disabled."
 else
-	install_docker
+  install_docker
 fi
 
 if [ "$NO_ZSH" = true ]; then
-    echo "Zsh disabled."
+  echo "Zsh disabled."
 else
-	install_oh_my_zsh
+  install_oh_my_zsh
 fi
+
+
+read -p "Installation complete, do you wish to reboot" reboot_choice
+case "$reboot_choice" in
+  y|Y ) reboot ;;
+  * ) exit 0 ;;
+esac
