@@ -1,0 +1,4 @@
+export PROMPT="%F{33%}%B%n@%m%f%b:%F{37%}%~%# %f"
+
+alias vim=nvim
+alias vi=nvim
